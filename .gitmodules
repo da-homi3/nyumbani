@@ -1,0 +1,3 @@
+[submodule "find-nyumba-smart"]
+	path = find-nyumba-smart
+	url = https://github.com/da-homi3/find-nyumba-smart.git
