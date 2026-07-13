@@ -17,4 +17,4 @@ npm install
 
 ## App development
 
-See [find-nyumba-smart/README_BACKEND.md](find-nyumba-smart/README_BACKEND.md) for env setup, migrations, and deploy.
+See [find-nyumba-smart/README.md](find-nyumba-smart/README.md) for setup, environment variables, migrations, testing, and deployment.
