@@ -1,0 +1,4 @@
+# Place Firebase Android config here (do not commit real file if policy forbids).
+# Firebase Console → project nyumbasearch-b70a1 → Android app ke.co.nyumbasearch.app
+# Download google-services.json into this folder (android/app/).
+# Gradle applies the Google Services plugin only when that file exists.

@@ -1,0 +1,9 @@
+# Copy to android/key.properties (gitignored). Use the Play upload keystore.
+# Preferred location on this machine:
+#   storeFile=C:\\secure\\nyumbasearch-release.keystore
+#   keyAlias=nyumbasearch
+# Passwords: see C:\secure\nyumbasearch-keystore-credentials.txt
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=nyumbasearch
+storeFile=C:\\secure\\nyumbasearch-release.keystore
