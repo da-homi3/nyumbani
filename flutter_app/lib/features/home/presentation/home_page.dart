@@ -432,6 +432,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
             ),
+            const SliverToBoxAdapter(child: _HomeRecommendations()),
             SliverToBoxAdapter(
               child: ColoredBox(
                 color: const Color(0xFF0B1220),
@@ -775,5 +776,112 @@ abstract final class ListingFormat {
       if (fromEnd > 1 && fromEnd % 3 == 1) buf.write(',');
     }
     return buf.toString();
+  }
+}
+
+class _HomeRecommendations extends ConsumerWidget {
+  const _HomeRecommendations();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(recommendationFeedProvider);
+    return async.maybeWhen(
+      data: (feed) {
+        if (feed == null) return const SizedBox.shrink();
+        final greeting = feed['greeting'] as String? ?? '';
+        final coldStart = feed['coldStart'] == true;
+        final shelves = feed['shelves'];
+        if (coldStart) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (greeting.isNotEmpty)
+                  Text(
+                    greeting,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tell us your area, budget and bedrooms to get matches.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          );
+        }
+        if (shelves is! List || shelves.isEmpty) return const SizedBox.shrink();
+        final first = shelves.first;
+        if (first is! Map) return const SizedBox.shrink();
+        final items = first['items'];
+        if (items is! List || items.isEmpty) return const SizedBox.shrink();
+        final cards = <Widget>[];
+        for (final raw in items.take(3)) {
+          if (raw is! Map) continue;
+          final property = raw['property'];
+          if (property is! Map) continue;
+          final listing = Listing.fromJson(Map<String, dynamic>.from(property));
+          final score = (raw['matchScore'] as num?)?.toInt();
+          cards.add(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (score != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '$score% Match',
+                      style: const TextStyle(
+                        color: Color(0xFF22C55E),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                PropertyCard(listing: listing),
+              ],
+            ),
+          );
+        }
+        if (cards.isEmpty) return const SizedBox.shrink();
+        return ColoredBox(
+          color: const Color(0xFF0B1220),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (greeting.isNotEmpty)
+                  Text(
+                    greeting,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                    ),
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  (first['title'] as String?) ?? 'Recommended for you',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                ...cards.map(
+                  (card) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: card,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
   }
 }

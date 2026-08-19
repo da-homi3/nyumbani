@@ -7,6 +7,7 @@ import 'package:nyumbasearch/core/errors/app_failure.dart';
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/features/auth/data/auth_controller.dart';
 import 'package:nyumbasearch/features/landlord/presentation/my_listings_page.dart';
+import 'package:nyumbasearch/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:nyumbasearch/routing/auth_nav.dart';
 
 const _propertyTypeOptions = <({String id, String label})>[
@@ -140,6 +141,44 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                 onPressed: () =>
                     context.push(loginLocation(from: '/landlord/listings/new')),
                 child: const Text('Sign in'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final entitlementsAsync = ref.watch(entitlementsProvider);
+    if (entitlementsAsync.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('New listing')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    final listingLimit = entitlementsAsync.valueOrNull?.listingLimit;
+    if (listingLimit != null && listingLimit <= 0) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('New listing')),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Subscribe to list properties',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'A paid landlord plan is required before you can publish listings.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.push('/landlord/plan'),
+                child: const Text('View plans'),
               ),
             ],
           ),

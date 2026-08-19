@@ -60,6 +60,27 @@ class MobileApiRepository {
 
   Future<Map<String, dynamic>> listSaved() => _api.getJson('/saved');
 
+  Future<Map<String, dynamic>> recommendationFeed({String? ownerId}) =>
+      _api.getJson(
+        '/recommendations',
+        query: {'ownerId': ?ownerId},
+      );
+
+  Future<Map<String, dynamic>> similarRecommendations(String propertyId) =>
+      _api.getJson('/recommendations/similar/$propertyId');
+
+  Future<Map<String, dynamic>> recommendationFeedback({
+    required String action,
+    String? propertyId,
+    String? ownerId,
+  }) {
+    return _api.postJson('/recommendations/feedback', body: {
+      'action': action,
+      'propertyId': ?propertyId,
+      'ownerId': ?ownerId,
+    });
+  }
+
   Future<Map<String, dynamic>> saveProperty(String propertyId) =>
       _api.putJson('/saved/$propertyId');
 

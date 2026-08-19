@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
+import 'package:nyumbasearch/features/auth/data/auth_controller.dart';
 import 'package:nyumbasearch/features/properties/data/listing.dart';
 import 'package:nyumbasearch/features/properties/data/listing_intel.dart';
 
@@ -186,4 +187,15 @@ final searchListingsProvider = FutureProvider.autoDispose<ListingsPage>((ref) as
 final listingDetailProvider =
     FutureProvider.autoDispose.family<Listing, String>((ref, id) async {
   return ref.watch(listingsRepositoryProvider).detail(id);
+});
+
+final recommendationFeedProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final session = ref.watch(authSessionProvider).valueOrNull;
+  if (session == null) return null;
+  final api = ref.watch(mobileApiRepositoryProvider);
+  try {
+    return await api.recommendationFeed();
+  } catch (_) {
+    return null;
+  }
 });

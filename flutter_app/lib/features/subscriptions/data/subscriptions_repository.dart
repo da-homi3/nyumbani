@@ -18,6 +18,7 @@ class UserEntitlements {
     this.leadPackBalance = 0,
     this.canViewLeadContacts = false,
     this.plusContactCredits = 0,
+    this.listingLimit,
   });
 
   final String tenantPlan;
@@ -31,6 +32,7 @@ class UserEntitlements {
   final int leadPackBalance;
   final bool canViewLeadContacts;
   final int plusContactCredits;
+  final int? listingLimit;
 
   factory UserEntitlements.fromJson(Map<String, dynamic> json) {
     final e = json['entitlements'] is Map
@@ -49,6 +51,7 @@ class UserEntitlements {
       leadPackBalance: (e['leadPackBalance'] as num?)?.toInt() ?? 0,
       canViewLeadContacts: e['canViewLeadContacts'] == true,
       plusContactCredits: (e['plusContactCredits'] as num?)?.toInt() ?? 0,
+      listingLimit: (e['listingLimit'] as num?)?.toInt(),
     );
   }
 }
@@ -299,6 +302,7 @@ class PmModuleSubscribeResult {
 
   bool get alreadyActive => status == 'already_active';
   bool get trialStarted => status == 'trial_started';
+  bool get includedWithPlan => status == 'included_with_plan';
   bool get requiresPayment => status == 'requires_payment';
 
   factory PmModuleSubscribeResult.fromJson(Map<String, dynamic> json) {

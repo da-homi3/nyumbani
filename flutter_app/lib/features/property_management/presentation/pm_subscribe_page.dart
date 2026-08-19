@@ -53,12 +53,18 @@ class _PmSubscribePageState extends ConsumerState<PmSubscribePage> {
           await ref.read(subscriptionsRepositoryProvider).subscribePmModule();
       if (!mounted) return;
 
-      if (result.alreadyActive || result.trialStarted) {
+      if (result.alreadyActive || result.trialStarted || result.includedWithPlan) {
         setState(() {
           _success = true;
-          _message = result.trialStarted
-              ? '30-day trial started${result.tier != null ? ' (${result.tier})' : ''}.'
-              : 'Property Management is already active.';
+          if (result.includedWithPlan) {
+            _message =
+                'Property Management is included with your paid marketplace plan. A 1% fee still applies on rent collected.';
+          } else if (result.trialStarted) {
+            _message =
+                'Bonus free month started after payment${result.tier != null ? ' (${result.tier})' : ''}.';
+          } else {
+            _message = 'Property Management is already active.';
+          }
           _tier = result.tier;
           _priceKes = result.priceKes;
         });
@@ -187,7 +193,7 @@ class _PmSubscribePageState extends ConsumerState<PmSubscribePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'First-time subscribers get a 30-day trial. Returning accounts pay the recommended tier.',
+            'Included free if you already pay for a marketplace plan. Otherwise pay your first month (next month free). A 1% fee still applies on all rent collected.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -201,7 +207,7 @@ class _PmSubscribePageState extends ConsumerState<PmSubscribePage> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Start / check eligibility'),
+                : const Text('Check price & continue'),
           ),
           if (_priceKes != null) ...[
             const SizedBox(height: 20),
