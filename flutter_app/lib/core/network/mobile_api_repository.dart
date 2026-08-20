@@ -19,6 +19,7 @@ class MobileApiRepository {
   Future<Map<String, dynamic>> searchListings({
     String? q,
     String? neighborhood,
+    String? locationId,
     String? type,
     String? pricingMode,
     int? minRent,
@@ -39,6 +40,7 @@ class MobileApiRepository {
       query: {
         'q': ?(qTrimmed != null && qTrimmed.isNotEmpty ? qTrimmed : null),
         'neighborhood': ?neighborhood,
+        'locationId': ?locationId,
         'type': ?type,
         'pricingMode': ?pricingMode,
         'minRent': ?minRent,
@@ -51,6 +53,66 @@ class MobileApiRepository {
         'originLat': ?originLat,
         'originLng': ?originLng,
         'maxImages': ?maxImages,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> searchLocations({
+    required String q,
+    int limit = 12,
+    double? lat,
+    double? lng,
+  }) {
+    return _api.getJson(
+      '/locations/search',
+      query: {
+        'q': q,
+        'limit': limit,
+        'lat': ?lat,
+        'lng': ?lng,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> resolveLocation({
+    required String q,
+    double? lat,
+    double? lng,
+  }) {
+    return _api.getJson(
+      '/locations/resolve',
+      query: {
+        'q': q,
+        'lat': ?lat,
+        'lng': ?lng,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> reverseGeocode({
+    required double lat,
+    required double lng,
+  }) {
+    return _api.getJson(
+      '/locations/reverse',
+      query: {
+        'lat': lat,
+        'lng': lng,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> suggestNeighborhood({
+    String? q,
+    double? lat,
+    double? lng,
+  }) {
+    return _api.getJson(
+      '/locations/suggest-neighborhood',
+      query: {
+        'q': ?q,
+        'lat': ?lat,
+        'lng': ?lng,
       },
     );
   }
