@@ -16,6 +16,7 @@ class ListingsRepository {
   Future<ListingsPage> search({
     String? q,
     String? neighborhood,
+    String? locationId,
     String? type,
     String? pricingMode,
     int? minRent,
@@ -30,6 +31,7 @@ class ListingsRepository {
     final json = await _api.searchListings(
       q: q,
       neighborhood: neighborhood,
+      locationId: locationId,
       type: type,
       pricingMode: pricingMode,
       minRent: minRent,
@@ -58,6 +60,7 @@ class SearchFilters {
   const SearchFilters({
     this.q = '',
     this.neighborhood,
+    this.locationId,
     this.type,
     this.pricingMode,
     this.maxRent,
@@ -71,6 +74,7 @@ class SearchFilters {
 
   final String q;
   final String? neighborhood;
+  final String? locationId;
   final String? type;
   final String? pricingMode;
   final int? maxRent;
@@ -84,6 +88,7 @@ class SearchFilters {
   SearchFilters copyWith({
     String? q,
     String? neighborhood,
+    String? locationId,
     String? type,
     String? pricingMode,
     int? maxRent,
@@ -94,6 +99,7 @@ class SearchFilters {
     bool? requireWater,
     bool? requireSecurity,
     bool clearNeighborhood = false,
+    bool clearLocationId = false,
     bool clearType = false,
     bool clearPricingMode = false,
     bool clearMaxRent = false,
@@ -102,6 +108,7 @@ class SearchFilters {
     return SearchFilters(
       q: q ?? this.q,
       neighborhood: clearNeighborhood ? null : (neighborhood ?? this.neighborhood),
+      locationId: clearLocationId ? null : (locationId ?? this.locationId),
       type: clearType ? null : (type ?? this.type),
       pricingMode: clearPricingMode ? null : (pricingMode ?? this.pricingMode),
       maxRent: clearMaxRent ? null : (maxRent ?? this.maxRent),
@@ -150,6 +157,7 @@ final searchListingsProvider = FutureProvider.autoDispose<ListingsPage>((ref) as
   final page = await repo.search(
     q: filters.q.isEmpty ? null : filters.q,
     neighborhood: filters.neighborhood,
+    locationId: filters.locationId,
     type: filters.type,
     pricingMode: filters.pricingMode,
     maxRent: filters.maxRent,

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nyumbasearch/core/analytics/analytics_client.dart';
+import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:nyumbasearch/features/home/presentation/home_page.dart'
     show kPopularNeighborhoods, kPropertyTypes;
@@ -70,16 +71,26 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   void _setChipQuery(String value) {
     _controller.text = value;
     ref.read(searchFiltersProvider.notifier).update(
-          (f) => f.copyWith(q: value, clearNeighborhood: true),
+          (f) => f.copyWith(q: value, clearNeighborhood: true, clearLocationId: true),
         );
     _trackSearch(q: value);
   }
 
-  void _setNeighborhood(String value) {
+  Future<void> _setNeighborhood(String value) async {
     _controller.text = value;
-    // Use neighborhood filter only — free-text `q` hits a separate search path.
+    String? locationId;
+    try {
+      final res = await ref.read(mobileApiRepositoryProvider).resolveLocation(q: value);
+      final loc = res['location'];
+      if (loc is Map) locationId = loc['id']?.toString();
+    } catch (_) {}
     ref.read(searchFiltersProvider.notifier).update(
-          (f) => f.copyWith(neighborhood: value, q: ''),
+          (f) => f.copyWith(
+            neighborhood: value,
+            locationId: locationId,
+            q: '',
+            clearLocationId: locationId == null,
+          ),
         );
     _trackSearch(neighborhood: value);
   }

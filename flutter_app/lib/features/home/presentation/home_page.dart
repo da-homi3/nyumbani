@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:nyumbasearch/features/home/presentation/home_testimonials.dart';
 import 'package:nyumbasearch/features/home/presentation/neighborhood_card.dart';
@@ -56,6 +57,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   String? _neighborhood;
+  String? _locationId;
   int? _maxBudget;
   String? _type;
 
@@ -63,9 +65,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.read(searchFiltersProvider.notifier).update(
           (f) => f.copyWith(
             neighborhood: _neighborhood,
+            locationId: _locationId,
             maxRent: _maxBudget,
             type: _type,
             clearNeighborhood: _neighborhood == null,
+            clearLocationId: _locationId == null,
             clearMaxRent: _maxBudget == null,
             clearType: _type == null,
             pricingMode: 'rent',
@@ -75,34 +79,51 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _pickNeighborhood() async {
-    final chosen = await showModalBottomSheet<String?>(
+    final chosen = await showModalBottomSheet<({String name, String? locationId})>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              ListTile(
-                title: const Text('Any neighborhood'),
-                onTap: () => Navigator.pop(ctx, ''),
-              ),
-              for (final n in kPopularNeighborhoods)
-                ListTile(
-                  leading: const Icon(Icons.place_outlined),
-                  title: Text(n),
-                  onTap: () => Navigator.pop(ctx, n),
-                ),
-            ],
-          ),
-        );
-      },
+      builder: (ctx) => const _NeighborhoodPickerSheet(),
     );
     if (chosen == null) return;
-    setState(() => _neighborhood = chosen.isEmpty ? null : chosen);
+    if (chosen.name.isEmpty) {
+      setState(() {
+        _neighborhood = null;
+        _locationId = null;
+      });
+      return;
+    }
+    if (chosen.locationId != null) {
+      setState(() {
+        _neighborhood = chosen.name;
+        _locationId = chosen.locationId;
+      });
+      return;
+    }
+    await _selectPlace(chosen.name);
+  }
+
+  Future<void> _selectPlace(String name, {bool browse = false}) async {
+    setState(() {
+      _neighborhood = name;
+      _locationId = null;
+    });
+    try {
+      final res = await ref.read(mobileApiRepositoryProvider).resolveLocation(q: name);
+      final loc = res['location'];
+      if (loc is Map && mounted) {
+        final id = loc['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          setState(() => _locationId = id);
+        }
+      }
+    } catch (_) {
+      // Neighborhood string fallback still works without locationId.
+    }
+    if (browse && mounted) _applyAndBrowse();
   }
 
   Future<void> _pickBudget() async {
@@ -313,10 +334,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       padding: const EdgeInsets.only(right: 8),
                                       child: ActionChip(
                                         label: Text(n),
-                                        onPressed: () {
-                                          setState(() => _neighborhood = n);
-                                          _applyAndBrowse();
-                                        },
+                                        onPressed: () => _selectPlace(n, browse: true),
                                         backgroundColor: Colors.black.withValues(alpha: 0.4),
                                         side: BorderSide(
                                           color: Colors.white.withValues(alpha: 0.15),
@@ -410,10 +428,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             final n = kPopularNeighborhoods[i];
                             return NeighborhoodCard(
                               name: n,
-                              onTap: () {
-                                setState(() => _neighborhood = n);
-                                _applyAndBrowse();
-                              },
+                              onTap: () => _selectPlace(n, browse: true),
                             );
                           },
                         ),
@@ -882,6 +897,150 @@ class _HomeRecommendations extends ConsumerWidget {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _NeighborhoodPickerSheet extends ConsumerStatefulWidget {
+  const _NeighborhoodPickerSheet();
+
+  @override
+  ConsumerState<_NeighborhoodPickerSheet> createState() =>
+      _NeighborhoodPickerSheetState();
+}
+
+class _NeighborhoodPickerSheetState
+    extends ConsumerState<_NeighborhoodPickerSheet> {
+  final _ctrl = TextEditingController();
+  List<({String id, String name, String subtitle})> _hits = const [];
+  var _busy = false;
+  int _seq = 0;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search(String value) async {
+    final q = value.trim();
+    if (q.length < 2) {
+      setState(() => _hits = const []);
+      return;
+    }
+    final seq = ++_seq;
+    setState(() => _busy = true);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (!mounted || seq != _seq) return;
+    try {
+      final res =
+          await ref.read(mobileApiRepositoryProvider).searchLocations(q: q, limit: 10);
+      if (!mounted || seq != _seq) return;
+      final raw = res['items'];
+      final next = <({String id, String name, String subtitle})>[];
+      if (raw is List) {
+        for (final row in raw) {
+          if (row is! Map) continue;
+          final id = row['id']?.toString();
+          final name = row['name']?.toString();
+          if (id == null || name == null || name.isEmpty) continue;
+          next.add((
+            id: id,
+            name: name,
+            subtitle: row['subtitle']?.toString() ?? row['type']?.toString() ?? '',
+          ));
+        }
+      }
+      setState(() {
+        _hits = next;
+        _busy = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _seq) return;
+      setState(() {
+        _hits = const [];
+        _busy = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.7,
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              ListTile(
+                title: const Text('Any neighborhood'),
+                onTap: () => Navigator.pop(context, (name: '', locationId: null)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: TextField(
+                  controller: _ctrl,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search places (Kilimani, Westlands…)',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _busy
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
+                  ),
+                  onChanged: _search,
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  children: [
+                    if (_hits.isNotEmpty) ...[
+                      for (final hit in _hits)
+                        ListTile(
+                          leading: const Icon(Icons.place_outlined),
+                          title: Text(hit.name),
+                          subtitle:
+                              hit.subtitle.isEmpty ? null : Text(hit.subtitle),
+                          onTap: () => Navigator.pop(
+                            context,
+                            (name: hit.name, locationId: hit.id),
+                          ),
+                        ),
+                      const Divider(),
+                    ],
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(
+                        'Popular',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    for (final n in kPopularNeighborhoods)
+                      ListTile(
+                        leading: const Icon(Icons.place_outlined),
+                        title: Text(n),
+                        onTap: () => Navigator.pop(
+                          context,
+                          (name: n, locationId: null),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
