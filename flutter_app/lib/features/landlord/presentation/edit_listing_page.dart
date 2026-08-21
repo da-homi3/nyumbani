@@ -37,6 +37,10 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
   String? _error;
   List<String> _images = const [];
   final _amenities = <String>{};
+  String? _locationId;
+  List<_EditLocationSuggestion> _suggestions = const [];
+  var _suggesting = false;
+  int _suggestSeq = 0;
 
   static const _amenityOptions = [
     'WiFi',
@@ -70,6 +74,60 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
     super.dispose();
   }
 
+  Future<void> _onNeighborhoodChanged(String value) async {
+    final q = value.trim();
+    if (_locationId != null) {
+      setState(() => _locationId = null);
+    }
+    if (q.length < 2) {
+      if (_suggestions.isNotEmpty) setState(() => _suggestions = const []);
+      return;
+    }
+    final seq = ++_suggestSeq;
+    setState(() => _suggesting = true);
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted || seq != _suggestSeq) return;
+    try {
+      final res = await ref.read(mobileApiRepositoryProvider).searchLocations(q: q, limit: 8);
+      if (!mounted || seq != _suggestSeq) return;
+      final raw = res['items'];
+      final items = <_EditLocationSuggestion>[];
+      if (raw is List) {
+        for (final row in raw) {
+          if (row is! Map) continue;
+          final id = row['id']?.toString();
+          final name = row['name']?.toString();
+          if (id == null || name == null || name.isEmpty) continue;
+          items.add(
+            _EditLocationSuggestion(
+              id: id,
+              name: name,
+              subtitle: row['subtitle']?.toString() ?? row['type']?.toString() ?? '',
+            ),
+          );
+        }
+      }
+      setState(() {
+        _suggestions = items;
+        _suggesting = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _suggestSeq) return;
+      setState(() {
+        _suggestions = const [];
+        _suggesting = false;
+      });
+    }
+  }
+
+  void _pickSuggestion(_EditLocationSuggestion hit) {
+    _neighborhoodCtrl.text = hit.name;
+    setState(() {
+      _locationId = hit.id;
+      _suggestions = const [];
+    });
+  }
+
   Future<void> _load() async {
     try {
       final json =
@@ -79,6 +137,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
         final m = Map<String, dynamic>.from(prop);
         _titleCtrl.text = (m['title'] as String?) ?? '';
         _neighborhoodCtrl.text = (m['neighborhood'] as String?) ?? '';
+        _locationId = m['location_id']?.toString();
         _rentCtrl.text = ((m['rent_kes'] as num?)?.toInt() ?? 0).toString();
         _depositCtrl.text = ((m['deposit_kes'] as num?)?.toInt() ?? 0).toString();
         _descriptionCtrl.text = (m['description'] as String?) ?? '';
@@ -116,7 +175,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
       final deposit = int.tryParse(_depositCtrl.text.trim().replaceAll(',', '')) ?? 0;
       final beds = int.tryParse(_bedsCtrl.text.trim()) ?? 0;
       final baths = int.tryParse(_bathsCtrl.text.trim()) ?? 0;
-      await ref.read(mobileApiRepositoryProvider).patchProperty(widget.propertyId, {
+      final body = <String, dynamic>{
         'title': _titleCtrl.text.trim(),
         'neighborhood': _neighborhoodCtrl.text.trim(),
         'rent_kes': rent,
@@ -128,7 +187,12 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
         'amenities': _amenities.toList(),
         'is_active': _isActive,
         'is_vacant': _isVacant,
-      });
+      };
+      final locationId = _locationId;
+      if (locationId != null && locationId.isNotEmpty) {
+        body['location_id'] = locationId;
+      }
+      await ref.read(mobileApiRepositoryProvider).patchProperty(widget.propertyId, body);
       ref.invalidate(ownerPropertiesProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -254,13 +318,51 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _neighborhoodCtrl,
-              decoration: const InputDecoration(
+              enabled: !_busy,
+              textCapitalization: TextCapitalization.words,
+              onChanged: _onNeighborhoodChanged,
+              decoration: InputDecoration(
                 labelText: 'Neighborhood',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                helperText: _locationId != null
+                    ? 'Matched to NyumbaSearch place directory'
+                    : 'Start typing to match a known place',
+                suffixIcon: _suggesting
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : const Icon(Icons.place_outlined),
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Neighborhood required' : null,
             ),
+            if (_suggestions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Material(
+                elevation: 1,
+                borderRadius: BorderRadius.circular(12),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _suggestions.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final hit = _suggestions[index];
+                    return ListTile(
+                      dense: true,
+                      title: Text(hit.name),
+                      subtitle: hit.subtitle.isEmpty ? null : Text(hit.subtitle),
+                      onTap: _busy ? null : () => _pickSuggestion(hit),
+                    );
+                  },
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             TextFormField(
               controller: _rentCtrl,
@@ -438,4 +540,16 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
       ),
     );
   }
+}
+
+class _EditLocationSuggestion {
+  const _EditLocationSuggestion({
+    required this.id,
+    required this.name,
+    required this.subtitle,
+  });
+
+  final String id;
+  final String name;
+  final String subtitle;
 }
