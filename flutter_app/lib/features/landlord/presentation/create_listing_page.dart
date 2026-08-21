@@ -58,6 +58,10 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   final _amenities = <String>{};
   var _busy = false;
   String? _localError;
+  String? _locationId;
+  List<_LocationSuggestion> _suggestions = const [];
+  var _suggesting = false;
+  int _suggestSeq = 0;
 
   static const _amenityOptions = [
     'WiFi',
@@ -80,6 +84,60 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     super.dispose();
   }
 
+  Future<void> _onNeighborhoodChanged(String value) async {
+    final q = value.trim();
+    if (_locationId != null) {
+      setState(() => _locationId = null);
+    }
+    if (q.length < 2) {
+      if (_suggestions.isNotEmpty) setState(() => _suggestions = const []);
+      return;
+    }
+    final seq = ++_suggestSeq;
+    setState(() => _suggesting = true);
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted || seq != _suggestSeq) return;
+    try {
+      final res = await ref.read(mobileApiRepositoryProvider).searchLocations(q: q, limit: 8);
+      if (!mounted || seq != _suggestSeq) return;
+      final raw = res['items'];
+      final items = <_LocationSuggestion>[];
+      if (raw is List) {
+        for (final row in raw) {
+          if (row is! Map) continue;
+          final id = row['id']?.toString();
+          final name = row['name']?.toString();
+          if (id == null || name == null || name.isEmpty) continue;
+          items.add(
+            _LocationSuggestion(
+              id: id,
+              name: name,
+              subtitle: row['subtitle']?.toString() ?? row['type']?.toString() ?? '',
+            ),
+          );
+        }
+      }
+      setState(() {
+        _suggestions = items;
+        _suggesting = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _suggestSeq) return;
+      setState(() {
+        _suggestions = const [];
+        _suggesting = false;
+      });
+    }
+  }
+
+  void _pickSuggestion(_LocationSuggestion hit) {
+    _neighborhoodCtrl.text = hit.name;
+    setState(() {
+      _locationId = hit.id;
+      _suggestions = const [];
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -90,7 +148,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
     try {
       final rent = int.parse(_rentCtrl.text.trim().replaceAll(',', ''));
-      await ref.read(mobileApiRepositoryProvider).createProperty({
+      final body = <String, dynamic>{
         'title': _titleCtrl.text.trim(),
         'neighborhood': _neighborhoodCtrl.text.trim(),
         'property_type': _propertyType,
@@ -101,7 +159,12 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         'description': _descriptionCtrl.text.trim(),
         'amenities': _amenities.toList(),
         'images': <String>[],
-      });
+      };
+      final locationId = _locationId;
+      if (locationId != null && locationId.isNotEmpty) {
+        body['location_id'] = locationId;
+      }
+      await ref.read(mobileApiRepositoryProvider).createProperty(body);
 
       ref.invalidate(ownerPropertiesProvider);
       if (!mounted) return;
@@ -212,9 +275,23 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
               controller: _neighborhoodCtrl,
               enabled: !_busy,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
+              onChanged: _onNeighborhoodChanged,
+              decoration: InputDecoration(
                 labelText: 'Neighborhood',
                 hintText: 'e.g. Kilimani',
+                helperText: _locationId != null
+                    ? 'Matched to NyumbaSearch place directory'
+                    : 'Start typing to match a known place',
+                suffixIcon: _suggesting
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : const Icon(Icons.place_outlined),
               ),
               validator: (v) {
                 final t = v?.trim() ?? '';
@@ -222,6 +299,28 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                 return null;
               },
             ),
+            if (_suggestions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Material(
+                elevation: 1,
+                borderRadius: BorderRadius.circular(12),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _suggestions.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final hit = _suggestions[index];
+                    return ListTile(
+                      dense: true,
+                      title: Text(hit.name),
+                      subtitle: hit.subtitle.isEmpty ? null : Text(hit.subtitle),
+                      onTap: _busy ? null : () => _pickSuggestion(hit),
+                    );
+                  },
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
               initialValue: _propertyType,
@@ -306,4 +405,16 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       ),
     );
   }
+}
+
+class _LocationSuggestion {
+  const _LocationSuggestion({
+    required this.id,
+    required this.name,
+    required this.subtitle,
+  });
+
+  final String id;
+  final String name;
+  final String subtitle;
 }
