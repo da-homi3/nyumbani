@@ -84,6 +84,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       final loc = res['location'];
       if (loc is Map) locationId = loc['id']?.toString();
     } catch (_) {}
+    if (locationId != null && locationId.isNotEmpty) {
+      unawaited(
+        ref.read(mobileApiRepositoryProvider).recordLocationSelect(
+              locationId: locationId,
+              q: value,
+            ),
+      );
+    }
     ref.read(searchFiltersProvider.notifier).update(
           (f) => f.copyWith(
             neighborhood: value,

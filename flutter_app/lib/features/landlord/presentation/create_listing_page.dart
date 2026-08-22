@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -136,6 +138,12 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       _locationId = hit.id;
       _suggestions = const [];
     });
+    unawaited(
+      ref.read(mobileApiRepositoryProvider).recordLocationSelect(
+            locationId: hit.id,
+            q: hit.name,
+          ),
+    );
   }
 
   Future<void> _submit() async {

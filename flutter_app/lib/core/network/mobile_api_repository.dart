@@ -74,6 +74,25 @@ class MobileApiRepository {
     );
   }
 
+  /// Fire-and-forget demand telemetry when the user picks a first-party place.
+  Future<void> recordLocationSelect({
+    required String locationId,
+    String? q,
+  }) async {
+    try {
+      await _api.postJson(
+        '/locations/select',
+        body: {
+          'location_id': locationId,
+          'q': ?q,
+          'source': 'mobile',
+        },
+      );
+    } catch (_) {
+      // non-blocking
+    }
+  }
+
   Future<Map<String, dynamic>> resolveLocation({
     required String q,
     double? lat,

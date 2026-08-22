@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1011,10 +1012,20 @@ class _NeighborhoodPickerSheetState
                           title: Text(hit.name),
                           subtitle:
                               hit.subtitle.isEmpty ? null : Text(hit.subtitle),
-                          onTap: () => Navigator.pop(
-                            context,
-                            (name: hit.name, locationId: hit.id),
-                          ),
+                          onTap: () {
+                            unawaited(
+                              ref
+                                  .read(mobileApiRepositoryProvider)
+                                  .recordLocationSelect(
+                                    locationId: hit.id,
+                                    q: hit.name,
+                                  ),
+                            );
+                            Navigator.pop(
+                              context,
+                              (name: hit.name, locationId: hit.id),
+                            );
+                          },
                         ),
                       const Divider(),
                     ],
