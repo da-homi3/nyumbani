@@ -10,30 +10,51 @@ Authoritative place hierarchy for NyumbaSearch search, listings filters, landlor
 
 ## Schema
 
-- `find-nyumba-smart/supabase/migrations/20260820140000_kenya_locations.sql` — PostGIS, locations, aliases, sources, property FKs
-- `find-nyumba-smart/supabase/migrations/20260820210000_location_phase3.sql` — location audit, location search telemetry, `locations_containing_point` RPC
+- `20260820140000_kenya_locations.sql` — PostGIS, locations, aliases, sources, property FKs
+- `20260820210000_location_phase3.sql` — location audit, location search telemetry, `locations_containing_point` RPC
+
+## Sources & provenance
+
+| Layer | Source | Confidence | Licence |
+|-------|--------|------------|---------|
+| IEBC hierarchy | stevehoober254/kenya-county-data | 90–95 | See upstream |
+| County polygons | geoBoundaries KEN ADM1 | 95 | CC BY 4.0 / ODbL |
+| Urban localities | `kenya-locations.json` | 55–70 | First-party catalog |
+| Major roads | OpenStreetMap motorway/trunk/primary (named only) | ~70 | ODbL |
+| Buildings | Optional file import (Microsoft BF / OSM extracts) | ~55 | Source file |
 
 ## Scripts
 
 ```bash
-# From find-nyumba-smart/
 npm run seed:locations
 npm run reconcile:locations
-npm run refresh:location-inventory
 node scripts/apply-location-phase3.mjs
-npm run seed:county-polygons
-npm run seed:osm-roads
+node scripts/seed-county-polygons.mjs
+node scripts/seed-osm-major-roads.mjs
+# Optional — real GeoJSON only:
+node scripts/seed-building-footprints.mjs path/to/buildings.geojson
 ```
 
 ## Product surfaces
 
 - **APIs**: `/api/locations/*` + Mobile BFF `/api/mobile/v1/locations/*`
 - **Ranking tiers**: `inside` → `near` → `marketed_as` when a place filter is active
-- **Admin**: Control Center → **Locations**
-- **SEO**: localities ≥3; wards ≥1 nationally; empty pages `noindex`
-- **Flutter**: landlord create-listing neighborhood autocomplete + location FK attach on create
-- **Reverse geocode**: county polygons via PostGIS when geom present
+- **Admin**: Control Center → **Locations** (aliases, activate/deactivate, demand, unmatched queue, audit)
+- **SEO**: static Nairobi slugs preserved; localities ≥3 listings; **wards ≥1 listing** nationally; empty pages `noindex`
+- **Demand**: search + view aggregation in admin Locations tab
+- **Flutter**: landlord create/edit listing neighborhood autocomplete via BFF; create/patch attach location FKs
+- **Daily cron**: unlinked listings get text resolve, then pin PIP / nearest-centroid fallback; inventory recount on attach
+
+## Inventory refresh
+
+```bash
+npm run refresh:location-inventory
+npm run reconcile:locations
+npm run seed:location-aliases
+```
+
+Updates `locations.inventory_count` from active property FKs (+ neighborhood text fallback). Attach also recounts touched locations. Report: `docs/location-inventory-report.json`.
 
 ## KeNHA / KURA note
 
-Official KeNHA/KURA CAD/road networks are not redistributed. OSM major roads are an open proxy with provenance.
+Official KeNHA/KURA CAD/road networks are not redistributed here. OSM major roads are a temporary open proxy with explicit provenance — replace when licensed official extracts are available.
