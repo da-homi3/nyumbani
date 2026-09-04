@@ -157,7 +157,7 @@ class _HomeTestimonialsCarouselState
         Text(
           'FROM THE COMMUNITY',
           style: theme.textTheme.labelMedium?.copyWith(
-            color: const Color(0xFF22C55E),
+            color: NyumbaTokens.primaryDark,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.1,
           ),
@@ -248,7 +248,7 @@ class _HomeTestimonialsCarouselState
                 height: 7,
                 decoration: BoxDecoration(
                   color: i == _index
-                      ? const Color(0xFF22C55E)
+                      ? NyumbaTokens.primaryDark
                       : Colors.white.withValues(alpha: 0.28),
                   borderRadius: BorderRadius.circular(999),
                 ),

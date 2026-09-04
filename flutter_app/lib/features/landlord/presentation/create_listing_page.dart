@@ -316,7 +316,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _suggestions.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final hit = _suggestions[index];
                     return ListTile(

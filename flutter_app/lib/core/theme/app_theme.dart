@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 
-/// NyumbaSearch theme — matches website Syne/Manrope + green CSS tokens.
+/// NyumbaSearch theme — warm brown/cream light default; green obsidian dark mode.
 class AppTheme {
   const AppTheme._();
 
@@ -71,7 +71,7 @@ class AppTheme {
     final scheme = ColorScheme(
       brightness: brightness,
       primary: NyumbaTokens.primaryLight,
-      onPrimary: Colors.white,
+      onPrimary: NyumbaTokens.ivory,
       primaryContainer: NyumbaTokens.primaryGlowLight,
       onPrimaryContainer: Colors.white,
       secondary: NyumbaTokens.gold,
@@ -140,7 +140,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
           backgroundColor: NyumbaTokens.primaryLight,
-          foregroundColor: Colors.white,
+          foregroundColor: NyumbaTokens.ivory,
           elevation: 0,
           shadowColor: NyumbaTokens.primaryLight.withValues(alpha: 0.35),
           shape: RoundedRectangleBorder(borderRadius: NyumbaTokens.borderRadius),

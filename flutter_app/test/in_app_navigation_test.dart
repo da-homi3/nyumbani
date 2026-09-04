@@ -18,6 +18,14 @@ void main() {
       expect(InAppNavigation.resolveHref('/rent'), '/rent');
     });
 
+    test('maps tenant workflow notification hrefs', () {
+      expect(InAppNavigation.resolveHref('/tenant/applications'), '/applications');
+      expect(InAppNavigation.resolveHref('/tenant/viewings'), '/viewings');
+      expect(InAppNavigation.resolveHref('/landlord/applications'), '/landlord/applications');
+      expect(InAppNavigation.resolveHref('/landlord/viewings'), '/landlord/viewings');
+      expect(InAppNavigation.resolveHref('/viewings'), '/viewings');
+    });
+
     test('returns null for empty or root href', () {
       expect(InAppNavigation.resolveHref(''), isNull);
       expect(InAppNavigation.resolveHref('/'), isNull);

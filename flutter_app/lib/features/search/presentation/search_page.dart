@@ -7,12 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nyumbasearch/core/analytics/analytics_client.dart';
-import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:nyumbasearch/features/home/presentation/home_page.dart'
     show kPopularNeighborhoods, kPropertyTypes;
 import 'package:nyumbasearch/features/properties/data/listings_providers.dart';
 import 'package:nyumbasearch/features/properties/presentation/property_card.dart';
+import 'package:nyumbasearch/features/search/nl_search_apply.dart';
 import 'package:nyumbasearch/shared/widgets/async_body.dart';
 import 'package:nyumbasearch/shared/widgets/empty_state.dart';
 import 'package:nyumbasearch/shared/widgets/nyumba_ai_fab.dart';
@@ -32,6 +32,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   final _controller = TextEditingController();
   Timer? _debounce;
   var _filtersExpanded = false;
+  List<String> _nlHints = const [];
+
+  Future<void> _applyNlSearch(String raw) async {
+    final parsed = await fetchNlSearch(ref, raw);
+    if (parsed == null) return;
+    setState(() => _nlHints = parsed.hints);
+    applyNlSearchToFilters(ref, parsed);
+    _controller.text = parsed.remainingQuery;
+  }
 
   @override
   void initState() {
@@ -142,7 +151,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         CachedNetworkImage(
                           imageUrl: _kBrowseHero,
                           fit: BoxFit.cover,
-                          color: const Color(0xFF14532D).withValues(alpha: 0.45),
+                          color: NyumbaTokens.espresso.withValues(alpha: 0.45),
                           colorBlendMode: BlendMode.darken,
                           errorWidget: (_, _, _) =>
                               const ColoredBox(color: Color(0xFF0B1220)),
@@ -181,7 +190,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                     Text(
                                       'Find your next home in Nairobi',
                                       style: theme.textTheme.headlineSmall?.copyWith(
-                                        color: const Color(0xFF86EFAC),
+                                        color: NyumbaTokens.primaryGlowDark,
                                         fontWeight: FontWeight.w800,
                                         height: 1.15,
                                       ),
@@ -212,10 +221,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                                 child: TextField(
                                                   controller: _controller,
                                                   onChanged: _onQueryChanged,
+                                                  onSubmitted: _applyNlSearch,
                                                   style: const TextStyle(color: Colors.white),
-                                                  cursorColor: const Color(0xFF22C55E),
+                                                  cursorColor: NyumbaTokens.primaryDark,
                                                   decoration: InputDecoration(
-                                                    hintText: 'Neighborhood, type, keyword...',
+                                                    hintText: 'Try: 2 bedroom in Kilimani under 60k',
                                                     hintStyle: TextStyle(
                                                       color: Colors.white.withValues(alpha: 0.45),
                                                     ),
@@ -225,7 +235,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                                 ),
                                               ),
                                               Material(
-                                                color: const Color(0xFF22C55E),
+                                                color: NyumbaTokens.primaryDark,
                                                 shape: const CircleBorder(),
                                                 child: IconButton(
                                                   tooltip: 'Near me / map',
@@ -242,6 +252,27 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                         ),
                                       ),
                                     ),
+                                    if (_nlHints.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        children: _nlHints
+                                            .map(
+                                              (hint) => Chip(
+                                                label: Text(
+                                                  hint,
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                                visualDensity: VisualDensity.compact,
+                                                backgroundColor:
+                                                    Colors.white.withValues(alpha: 0.12),
+                                                labelStyle: const TextStyle(color: Colors.white),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -315,7 +346,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             Text(
                               total > 0 ? '$total homes found' : '… homes',
                               style: theme.textTheme.titleSmall?.copyWith(
-                                color: const Color(0xFF22C55E),
+                                color: NyumbaTokens.primaryDark,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -362,6 +393,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 onSelected: (v) {
                                   ref.read(searchFiltersProvider.notifier).update(
                                         (f) => f.copyWith(requireParking: v),
+                                      );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              FilterChip(
+                                label: const Text('Pet friendly'),
+                                selected: filters.requirePetFriendly,
+                                onSelected: (v) {
+                                  ref.read(searchFiltersProvider.notifier).update(
+                                        (f) => f.copyWith(requirePetFriendly: v),
                                       );
                                 },
                               ),

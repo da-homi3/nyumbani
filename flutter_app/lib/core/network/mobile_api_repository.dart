@@ -16,6 +16,17 @@ class MobileApiRepository {
 
   Future<Map<String, dynamic>> health() => _api.getJson('/health');
 
+  Future<Map<String, dynamic>> parseNlSearch(String q, {bool includeListings = false}) {
+    final trimmed = q.trim();
+    return _api.getJson(
+      '/search/nl',
+      query: {
+        'q': trimmed,
+        if (includeListings) 'includeListings': '1',
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> searchListings({
     String? q,
     String? neighborhood,
@@ -26,6 +37,8 @@ class MobileApiRepository {
     int? maxRent,
     int? minBedrooms,
     bool verifiedOnly = false,
+    bool parking = false,
+    bool petFriendly = false,
     String sortBy = 'newest',
     int limit = 20,
     int offset = 0,
@@ -47,6 +60,8 @@ class MobileApiRepository {
         'maxRent': ?maxRent,
         'minBedrooms': ?minBedrooms,
         if (verifiedOnly) 'verifiedOnly': '1',
+        if (parking) 'parking': '1',
+        if (petFriendly) 'petFriendly': '1',
         'sortBy': sortBy,
         'limit': limit,
         'offset': offset,
@@ -854,6 +869,75 @@ class MobileApiRepository {
 
   Future<Map<String, dynamic>> orgMembership() =>
       _api.getJson('/me/org-membership');
+
+  Future<Map<String, dynamic>> tenantProfileBundle() =>
+      _api.getJson('/tenant/profile');
+
+  Future<Map<String, dynamic>> listTenantApplications() =>
+      _api.getJson('/tenant/applications');
+
+  Future<Map<String, dynamic>> submitRentalApplication({
+    required String propertyId,
+    String? message,
+    String? moveInDate,
+    bool shareProfile = true,
+  }) {
+    return _api.postJson('/applications', body: {
+      'propertyId': propertyId,
+      'message': ?message,
+      'moveInDate': ?moveInDate,
+      'shareProfile': shareProfile,
+    });
+  }
+
+  Future<Map<String, dynamic>> withdrawRentalApplication(String applicationId) =>
+      _api.postJson('/applications/$applicationId/withdraw', body: {});
+
+  Future<Map<String, dynamic>> listLandlordApplications() =>
+      _api.getJson('/landlord/applications');
+
+  Future<Map<String, dynamic>> reviewLandlordApplication(
+    String applicationId, {
+    required String status,
+    String? landlordNotes,
+  }) {
+    return _api.postJson('/landlord/applications/$applicationId/review', body: {
+      'status': status,
+      'landlordNotes': ?landlordNotes,
+    });
+  }
+
+  Future<Map<String, dynamic>> listTenantViewings() =>
+      _api.getJson('/tenant/viewings');
+
+  Future<Map<String, dynamic>> listLandlordViewings() =>
+      _api.getJson('/landlord/viewings');
+
+  Future<Map<String, dynamic>> providerPortfolio(String providerId) =>
+      _api.getJson('/providers/$providerId/portfolio');
+
+  Future<Map<String, dynamic>> featuredAgencies() => _api.getJson('/agencies/featured');
+
+  Future<Map<String, dynamic>> bookViewing({
+    required String propertyId,
+    required String scheduledAt,
+    String? notes,
+  }) {
+    return _api.postJson('/viewings', body: {
+      'propertyId': propertyId,
+      'scheduledAt': scheduledAt,
+      'notes': ?notes,
+    });
+  }
+
+  Future<Map<String, dynamic>> updateViewingStatus({
+    required String viewingId,
+    required String status,
+  }) {
+    return _api.postJson('/viewings/$viewingId/status', body: {
+      'status': status,
+    });
+  }
 
   Future<Map<String, dynamic>> listOrgTeam() => _api.getJson('/org/team');
 

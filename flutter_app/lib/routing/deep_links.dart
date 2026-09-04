@@ -22,6 +22,24 @@ class DeepLinks {
       return '/property/${segments[2]}';
     }
 
+    if (segments.length >= 3 &&
+        segments[0] == 'tenant' &&
+        segments[1] == 'provider') {
+      return '/provider/${segments[2]}';
+    }
+
+    if (segments.length >= 2 &&
+        segments[0] == 'tenant' &&
+        segments[1] == 'applications') {
+      return '/applications';
+    }
+
+    if (segments.length >= 2 &&
+        segments[0] == 'tenant' &&
+        segments[1] == 'viewings') {
+      return '/viewings';
+    }
+
     // Alias if we ever publish shorter links
     if (segments.length >= 2 && segments[0] == 'property') {
       return '/property/${segments[1]}';
@@ -146,6 +164,12 @@ class DeepLinks {
       }
       if (segments.length >= 2 && segments[1] == 'leads') {
         return '/landlord/leads';
+      }
+      if (segments.length >= 2 && segments[1] == 'applications') {
+        return '/landlord/applications';
+      }
+      if (segments.length >= 2 && segments[1] == 'viewings') {
+        return '/landlord/viewings';
       }
       if (segments.length >= 2 && segments[1] == 'properties') {
         if (segments.length >= 3 && segments[2] == 'new') {

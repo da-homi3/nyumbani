@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nyumbasearch/core/errors/app_failure.dart';
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/features/auth/data/auth_controller.dart';
+import 'package:nyumbasearch/features/properties/data/listings_providers.dart';
 import 'package:nyumbasearch/routing/auth_nav.dart';
 import 'package:nyumbasearch/shared/widgets/async_body.dart';
 
@@ -19,11 +20,73 @@ final savedSearchesProvider =
       .toList();
 });
 
+Map<String, dynamic> _filtersPayload(SearchFilters f) {
+  final out = <String, dynamic>{
+    'source': 'mobile',
+    'frequency': 'instant',
+  };
+  if (f.neighborhood != null && f.neighborhood!.trim().isNotEmpty) {
+    out['neighborhood'] = f.neighborhood!.trim();
+  }
+  if (f.locationId != null && f.locationId!.isNotEmpty) {
+    out['locationId'] = f.locationId;
+  }
+  if (f.type != null && f.type!.isNotEmpty && f.type != 'any') {
+    out['propertyType'] = f.type;
+    out['types'] = [f.type];
+  }
+  if (f.maxRent != null) {
+    out['maxRent'] = f.maxRent;
+    out['maxBudget'] = f.maxRent;
+  }
+  if (f.minRent != null) {
+    out['minRent'] = f.minRent;
+  }
+  if (f.minBedrooms != null) {
+    out['bedrooms'] = f.minBedrooms;
+  }
+  if (f.pricingMode == 'rent' || f.pricingMode == 'sale') {
+    out['listingPurpose'] = f.pricingMode;
+  }
+  if (f.verifiedOnly) {
+    out['verifiedLevel2Plus'] = true;
+  }
+  if (f.requireWater) {
+    out['waterGoodOnly'] = true;
+  }
+  if (f.requireParking) {
+    out['parking'] = true;
+  }
+  if (f.requirePetFriendly) {
+    out['petFriendly'] = true;
+  }
+  if (f.q.trim().isNotEmpty) {
+    out['q'] = f.q.trim();
+  }
+  return out;
+}
+
+String _defaultAlertName(SearchFilters f) {
+  final parts = <String>[];
+  if (f.neighborhood != null && f.neighborhood!.trim().isNotEmpty) {
+    parts.add(f.neighborhood!.trim());
+  }
+  if (f.type != null && f.type!.isNotEmpty && f.type != 'any') {
+    parts.add(f.type!.replaceAll('_', ' '));
+  }
+  if (f.maxRent != null) {
+    parts.add('≤ ${f.maxRent}');
+  }
+  if (parts.isEmpty) return 'My search alert';
+  return parts.join(' · ');
+}
+
 class SavedSearchesPage extends ConsumerWidget {
   const SavedSearchesPage({super.key});
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final nameCtrl = TextEditingController();
+    final current = ref.read(searchFiltersProvider);
+    final nameCtrl = TextEditingController(text: _defaultAlertName(current));
     var alert = true;
     final ok = await showDialog<bool>(
       context: context,
@@ -34,10 +97,16 @@ class SavedSearchesPage extends ConsumerWidget {
               title: const Text('Save search alert'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
                     controller: nameCtrl,
                     decoration: const InputDecoration(labelText: 'Name'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Uses your current Search filters (area, type, budget).',
+                    style: Theme.of(ctx).textTheme.bodySmall,
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -62,7 +131,7 @@ class SavedSearchesPage extends ConsumerWidget {
     try {
       await ref.read(mobileApiRepositoryProvider).createSavedSearch({
         'name': name,
-        'filters': {'source': 'mobile'},
+        'filters': _filtersPayload(current),
         'alertEnabled': alert,
       });
       ref.invalidate(savedSearchesProvider);

@@ -71,7 +71,7 @@ class ProvidersPage extends ConsumerWidget {
     for (final f in _fallbackCategories) {
       if (key.contains(f.id)) return f.glow;
     }
-    return const Color(0xFF22C55E);
+    return NyumbaTokens.primaryDark;
   }
 
   @override
@@ -102,7 +102,7 @@ class ProvidersPage extends ConsumerWidget {
                     Text(
                       'VERIFIED HOME SERVICES',
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: const Color(0xFF22C55E),
+                        color: NyumbaTokens.primaryDark,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.1,
                       ),

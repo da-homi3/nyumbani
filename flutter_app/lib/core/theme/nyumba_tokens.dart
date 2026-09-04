@@ -2,34 +2,42 @@ import 'package:flutter/material.dart';
 
 /// Design tokens mirrored from find-nyumba-smart/src/styles.css.
 abstract final class NyumbaTokens {
-  // Brand mark only (app icon / logo plate) — not UI primary.
+  // Brand mark (logo plate) + light-mode UI primary.
   static const Color cocoa = Color(0xFF4A2713);
+  static const Color walnut = Color(0xFF5C3D2E);
+  static const Color bronze = Color(0xFF8B5E3C);
+  static const Color espresso = Color(0xFF2A1B15);
+  static const Color cream = Color(0xFFFAF6F0);
+  static const Color ivory = Color(0xFFFFFCF7);
+  static const Color linen = Color(0xFFF0E8DC);
 
   static const Color forest = Color(0xFF086B2E);
-  static const Color primaryLight = Color(0xFF0A8F3D); // jade
-  static const Color primaryGlowLight = Color(0xFF16A34A); // mint
-  static const Color primaryDark = Color(0xFF16A34A);
-  static const Color primaryGlowDark = Color(0xFF22C55E);
-  static const Color sage = Color(0xFFDCFCE7);
+  /// Light mode primary — warm walnut brown.
+  static const Color primaryLight = Color(0xFF5C3D2E);
+  static const Color primaryGlowLight = Color(0xFF8B5E3C);
+  /// Dark mode primary — emerald green (product default theme).
+  static const Color primaryDark = Color(0xFF22C55E);
+  static const Color primaryGlowDark = Color(0xFF4ADE80);
+  static const Color sage = Color(0xFFE8F5E9);
 
-  static const Color gold = Color(0xFFFFD54F);
-  static const Color goldForeground = Color(0xFF111827);
-  static const Color accent = Color(0xFFFEF9C3);
+  static const Color gold = Color(0xFFC9A962);
+  static const Color goldForeground = Color(0xFF2A1B15);
+  static const Color accent = Color(0xFFF5E6C8);
 
-  static const Color backgroundLight = Color(0xFFF8FAFC);
-  static const Color foregroundLight = Color(0xFF111827);
-  static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color mutedLight = Color(0xFFF1F5F9);
-  static const Color mutedForegroundLight = Color(0xFF64748B);
+  static const Color backgroundLight = Color(0xFFFAF6F0);
+  static const Color foregroundLight = Color(0xFF2A1B15);
+  static const Color cardLight = Color(0xFFFFFCF7);
+  static const Color mutedLight = Color(0xFFF0E8DC);
+  static const Color mutedForegroundLight = Color(0xFF6B5344);
 
-  static const Color backgroundDark = Color(0xFF111827);
-  static const Color foregroundDark = Color(0xFFF8FAFC);
-  static const Color cardDark = Color(0xFF1F2937);
-  static const Color mutedDark = Color(0xFF273549);
-  static const Color mutedForegroundDark = Color(0xFF94A3B8);
+  static const Color backgroundDark = Color(0xFF0E0F14);
+  static const Color foregroundDark = Color(0xFFFAFAFA);
+  static const Color cardDark = Color(0xFF1A222C);
+  static const Color mutedDark = Color(0xFF1D2028);
+  static const Color mutedForegroundDark = Color(0xFF9CA3AF);
 
-  static const Color borderLight = Color(0xFFE2E8F0);
-  static const Color borderDark = Color(0xFF334155);
+  static const Color borderLight = Color(0xFFE0D4C4);
+  static const Color borderDark = Color(0x33FAFAFA);
 
   static const Color destructive = Color(0xFFDC2626);
   static const Color success = Color(0xFF16A34A);
@@ -84,9 +92,10 @@ abstract final class NyumbaTokens {
 
   static List<BoxShadow> shadowSoft(Brightness brightness) {
     final alpha = brightness == Brightness.dark ? 0.28 : 0.08;
+    final base = brightness == Brightness.dark ? const Color(0xFF111827) : espresso;
     return [
       BoxShadow(
-        color: const Color(0xFF111827).withValues(alpha: alpha),
+        color: base.withValues(alpha: alpha),
         blurRadius: 10,
         offset: const Offset(0, 2),
       ),
@@ -94,10 +103,11 @@ abstract final class NyumbaTokens {
   }
 
   static List<BoxShadow> shadowCard(Brightness brightness) {
-    final alpha = brightness == Brightness.dark ? 0.4 : 0.12;
+    final alpha = brightness == Brightness.dark ? 0.4 : 0.1;
+    final base = brightness == Brightness.dark ? const Color(0xFF111827) : espresso;
     return [
       BoxShadow(
-        color: const Color(0xFF111827).withValues(alpha: alpha),
+        color: base.withValues(alpha: alpha),
         blurRadius: 28,
         offset: const Offset(0, 8),
         spreadRadius: -8,

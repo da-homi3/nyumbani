@@ -295,7 +295,7 @@ class _ProfileTab extends ConsumerWidget {
                 FilledButton(
                   onPressed: saving ? null : onSave,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF22C55E),
+                    backgroundColor: NyumbaTokens.primaryDark,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: saving
@@ -333,7 +333,7 @@ class _ProfileTab extends ConsumerWidget {
                       child: Text(
                         active ? 'Manage membership →' : 'Upgrade to Plus →',
                         style: const TextStyle(
-                          color: Color(0xFF22C55E),
+                          color: NyumbaTokens.primaryDark,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

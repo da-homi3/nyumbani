@@ -13,14 +13,16 @@ class InAppNavigation {
     final trimmed = href.trim();
     if (trimmed.isEmpty || trimmed == '/') return null;
 
-    if (trimmed.startsWith('/')) return trimmed;
-
     final uri = Uri.tryParse(trimmed);
     if (uri == null) return null;
 
-    final absolute = uri.hasScheme ? uri : Uri.parse('${AppConfig.apiBaseUrl}$trimmed');
+    final absolute = uri.hasScheme
+        ? uri
+        : Uri.parse('${AppConfig.apiBaseUrl}${trimmed.startsWith('/') ? trimmed : '/$trimmed'}');
     final mapped = DeepLinks.toAppLocation(absolute);
     if (mapped != null) return mapped;
+
+    if (trimmed.startsWith('/')) return trimmed;
 
     if (absolute.path.isNotEmpty && absolute.path != '/') {
       return absolute.path;

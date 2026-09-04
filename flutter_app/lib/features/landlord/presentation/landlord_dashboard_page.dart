@@ -59,6 +59,8 @@ const _landlordNav = <PortalNavItem>[
   PortalNavItem(icon: Icons.bolt_outlined, label: 'Boost', path: '/landlord/boost'),
   PortalNavItem(icon: Icons.key_outlined, label: 'Caretakers', path: '/landlord/caretakers'),
   PortalNavItem(icon: Icons.card_giftcard_outlined, label: 'Lead packs', path: '/landlord/leads'),
+  PortalNavItem(icon: Icons.description_outlined, label: 'Applications', path: '/landlord/applications'),
+  PortalNavItem(icon: Icons.calendar_month_outlined, label: 'Viewings', path: '/landlord/viewings'),
   PortalNavItem(icon: Icons.workspace_premium_outlined, label: 'Plan', path: '/landlord/plan'),
   PortalNavItem(icon: Icons.payments_outlined, label: 'Billing', path: '/billing'),
   PortalNavItem(icon: Icons.account_balance_wallet_outlined, label: 'Payouts', path: '/landlord/payouts'),

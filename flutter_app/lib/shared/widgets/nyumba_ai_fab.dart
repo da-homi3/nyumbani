@@ -44,7 +44,7 @@ class _NyumbaAiFabState extends State<NyumbaAiFab> {
           height: 68,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+            color: NyumbaTokens.primaryDark.withValues(alpha: 0.18),
           ),
         )
             .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -56,7 +56,7 @@ class _NyumbaAiFabState extends State<NyumbaAiFab> {
             .fade(begin: 0.55, end: 0.15, duration: 1400.ms),
         FloatingActionButton(
           heroTag: 'nyumba-ai-fab',
-          backgroundColor: const Color(0xFF22C55E),
+          backgroundColor: NyumbaTokens.primaryDark,
           foregroundColor: Colors.white,
           onPressed: widget.onPressed ?? () => context.push('/plus'),
           child: AnimatedSwitcher(

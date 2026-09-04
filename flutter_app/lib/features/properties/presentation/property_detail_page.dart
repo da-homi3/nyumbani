@@ -9,6 +9,8 @@ import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:nyumbasearch/features/compare/data/compare_controller.dart';
 import 'package:nyumbasearch/features/favorites/presentation/saved_page.dart';
 import 'package:nyumbasearch/features/messages/presentation/message_landlord_card.dart';
+import 'package:nyumbasearch/features/applications/presentation/apply_to_rent_card.dart';
+import 'package:nyumbasearch/features/viewings/presentation/book_viewing_card.dart';
 import 'package:nyumbasearch/features/properties/data/listing.dart';
 import 'package:nyumbasearch/features/properties/data/listing_intel.dart';
 import 'package:nyumbasearch/features/properties/data/listings_providers.dart';
@@ -222,7 +224,17 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                       const SizedBox(height: 24),
                       ContactUnlockCard(listingId: listing.id),
                       const SizedBox(height: 16),
+                      BookViewingCard(
+                        listingId: listing.id,
+                        listingTitle: listing.title,
+                      ),
+                      const SizedBox(height: 16),
                       MessageLandlordCard(listingId: listing.id),
+                      const SizedBox(height: 16),
+                      ApplyToRentCard(
+                        listingId: listing.id,
+                        listingTitle: listing.title,
+                      ),
                       const SizedBox(height: 28),
                       ReviewsSection(listingId: listing.id),
                     ],

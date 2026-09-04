@@ -101,7 +101,7 @@ class PropertyCard extends ConsumerWidget {
                           _Badge(
                             icon: Icons.verified,
                             label: 'Verified',
-                            background: const Color(0xFF16A34A),
+                            background: NyumbaTokens.primaryDark,
                             foreground: Colors.white,
                           ),
                         if (listing.isVerified) ...[
@@ -110,7 +110,7 @@ class PropertyCard extends ConsumerWidget {
                             icon: Icons.circle,
                             label: 'Business Verified',
                             background: Colors.black.withValues(alpha: 0.55),
-                            foreground: const Color(0xFF86EFAC),
+                            foreground: NyumbaTokens.espresso,
                             iconSize: 8,
                           ),
                         ],
@@ -224,7 +224,7 @@ class PropertyCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF22C55E),
+                      color: NyumbaTokens.primaryDark,
                     ),
                   ),
                   const SizedBox(height: 8),

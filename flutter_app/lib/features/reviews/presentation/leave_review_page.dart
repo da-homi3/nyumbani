@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import 'package:nyumbasearch/core/config/app_config.dart';
 import 'package:nyumbasearch/core/errors/app_failure.dart';
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/features/auth/data/auth_controller.dart';
@@ -84,11 +82,8 @@ class _LeaveReviewPageState extends ConsumerState<LeaveReviewPage> {
     }
   }
 
-  Future<void> _openWebViewing() async {
-    final uri = Uri.parse(
-      '${AppConfig.apiBaseUrl}/tenant/property/${widget.propertyId}',
-    );
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  void _openViewingBooking() {
+    context.push('/property/${widget.propertyId}');
   }
 
   @override
@@ -148,8 +143,8 @@ class _LeaveReviewPageState extends ConsumerState<LeaveReviewPage> {
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(
-                          onPressed: _openWebViewing,
-                          child: const Text('Book a viewing on the website'),
+                          onPressed: _openViewingBooking,
+                          child: const Text('Book a viewing'),
                         ),
                       ],
                     ),

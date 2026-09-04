@@ -150,7 +150,7 @@ class _AdminHomePageState extends ConsumerState<AdminHomePage> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF22C55E),
+                                color: NyumbaTokens.primaryDark,
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(

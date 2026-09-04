@@ -674,7 +674,7 @@ class _RentLink extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF22C55E),
+            color: NyumbaTokens.primaryDark,
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),

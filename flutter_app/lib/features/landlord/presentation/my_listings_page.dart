@@ -262,7 +262,7 @@ class _OwnerPropertyCard extends StatelessWidget {
                           Text(
                             'KES ${property.rentKes}',
                             style: theme.textTheme.titleSmall?.copyWith(
-                              color: const Color(0xFF22C55E),
+                              color: NyumbaTokens.primaryDark,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -273,7 +273,7 @@ class _OwnerPropertyCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: vacant
                                   ? const Color(0xFFD97706).withValues(alpha: 0.2)
-                                  : const Color(0xFF22C55E).withValues(alpha: 0.2),
+                                  : NyumbaTokens.primaryDark.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -281,7 +281,7 @@ class _OwnerPropertyCard extends StatelessWidget {
                               style: TextStyle(
                                 color: vacant
                                     ? const Color(0xFFFB923C)
-                                    : const Color(0xFF22C55E),
+                                    : NyumbaTokens.primaryDark,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               ),

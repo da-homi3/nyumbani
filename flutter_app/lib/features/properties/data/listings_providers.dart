@@ -23,6 +23,8 @@ class ListingsRepository {
     int? maxRent,
     int? minBedrooms,
     bool verifiedOnly = false,
+    bool parking = false,
+    bool petFriendly = false,
     String sortBy = 'newest',
     int limit = 20,
     int offset = 0,
@@ -38,6 +40,8 @@ class ListingsRepository {
       maxRent: maxRent,
       minBedrooms: minBedrooms,
       verifiedOnly: verifiedOnly,
+      parking: parking,
+      petFriendly: petFriendly,
       sortBy: sortBy,
       limit: limit,
       offset: offset,
@@ -63,11 +67,13 @@ class SearchFilters {
     this.locationId,
     this.type,
     this.pricingMode,
+    this.minRent,
     this.maxRent,
     this.minBedrooms,
     this.verifiedOnly = false,
     this.sortBy = 'newest',
     this.requireParking = false,
+    this.requirePetFriendly = false,
     this.requireWater = false,
     this.requireSecurity = false,
   });
@@ -77,11 +83,13 @@ class SearchFilters {
   final String? locationId;
   final String? type;
   final String? pricingMode;
+  final int? minRent;
   final int? maxRent;
   final int? minBedrooms;
   final bool verifiedOnly;
   final String sortBy;
   final bool requireParking;
+  final bool requirePetFriendly;
   final bool requireWater;
   final bool requireSecurity;
 
@@ -91,17 +99,20 @@ class SearchFilters {
     String? locationId,
     String? type,
     String? pricingMode,
+    int? minRent,
     int? maxRent,
     int? minBedrooms,
     bool? verifiedOnly,
     String? sortBy,
     bool? requireParking,
+    bool? requirePetFriendly,
     bool? requireWater,
     bool? requireSecurity,
     bool clearNeighborhood = false,
     bool clearLocationId = false,
     bool clearType = false,
     bool clearPricingMode = false,
+    bool clearMinRent = false,
     bool clearMaxRent = false,
     bool clearMinBedrooms = false,
   }) {
@@ -111,11 +122,13 @@ class SearchFilters {
       locationId: clearLocationId ? null : (locationId ?? this.locationId),
       type: clearType ? null : (type ?? this.type),
       pricingMode: clearPricingMode ? null : (pricingMode ?? this.pricingMode),
+      minRent: clearMinRent ? null : (minRent ?? this.minRent),
       maxRent: clearMaxRent ? null : (maxRent ?? this.maxRent),
       minBedrooms: clearMinBedrooms ? null : (minBedrooms ?? this.minBedrooms),
       verifiedOnly: verifiedOnly ?? this.verifiedOnly,
       sortBy: sortBy ?? this.sortBy,
       requireParking: requireParking ?? this.requireParking,
+      requirePetFriendly: requirePetFriendly ?? this.requirePetFriendly,
       requireWater: requireWater ?? this.requireWater,
       requireSecurity: requireSecurity ?? this.requireSecurity,
     );
@@ -161,22 +174,22 @@ final searchListingsProvider = FutureProvider.autoDispose<ListingsPage>((ref) as
     type: filters.type,
     pricingMode: filters.pricingMode,
     maxRent: filters.maxRent,
+    minRent: filters.minRent,
     minBedrooms: filters.minBedrooms,
     verifiedOnly: filters.verifiedOnly,
+    parking: filters.requireParking,
+    petFriendly: filters.requirePetFriendly,
     sortBy: filters.sortBy,
     limit: 40,
   );
 
-  // Amenity chips are client-side (BFF listings query has no amenity param yet).
-  if (!filters.requireParking &&
-      !filters.requireWater &&
-      !filters.requireSecurity) {
+  // Water/security intel is derived client-side (not a BFF amenity contains filter yet).
+  if (!filters.requireWater && !filters.requireSecurity) {
     return page;
   }
 
   bool matches(Listing listing) {
     final intel = ListingIntel.fromAmenities(listing.amenities);
-    if (filters.requireParking && !intel.parking) return false;
     if (filters.requireWater) {
       final w = intel.water.toLowerCase();
       if (w.contains('none') || w.contains('unknown') || w.isEmpty) return false;

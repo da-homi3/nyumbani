@@ -397,7 +397,7 @@ class _MapPageState extends ConsumerState<MapPage>
                             ),
                           ),
                           Material(
-                            color: const Color(0xFF22C55E),
+                            color: NyumbaTokens.primaryDark,
                             shape: const CircleBorder(),
                             child: IconButton(
                               tooltip: '3D buildings on',

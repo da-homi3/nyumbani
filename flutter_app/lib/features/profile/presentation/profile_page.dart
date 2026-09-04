@@ -9,6 +9,7 @@ import 'package:nyumbasearch/features/auth/data/auth_controller.dart';
 import 'package:nyumbasearch/features/maps/data/map_providers.dart';
 import 'package:nyumbasearch/features/profile/data/me_models.dart';
 import 'package:nyumbasearch/features/profile/data/me_providers.dart';
+import 'package:nyumbasearch/features/profile/data/tenant_profile_providers.dart';
 import 'package:nyumbasearch/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:nyumbasearch/routing/deep_links.dart';
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
@@ -194,6 +195,9 @@ class ProfilePage extends ConsumerWidget {
                     icon: const Icon(Icons.edit_outlined),
                     label: const Text('Edit profile'),
                   ),
+                  const SizedBox(height: 16),
+                  const _TenantProfileScoreSection(),
+                  const SizedBox(height: 8),
                   Consumer(
                     builder: (context, ref, _) {
                       final ent = ref.watch(entitlementsProvider).valueOrNull;
@@ -256,6 +260,20 @@ class ProfilePage extends ConsumerWidget {
                     icon: Icons.favorite_outline,
                     title: 'Saved homes',
                     onTap: () => context.push('/saved'),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.calendar_month_outlined),
+                    title: const Text('My viewings'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/viewings'),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.description_outlined),
+                    title: const Text('My applications'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/applications'),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -383,6 +401,75 @@ class ProfilePage extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _TenantProfileScoreSection extends ConsumerWidget {
+  const _TenantProfileScoreSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bundleAsync = ref.watch(tenantProfileBundleProvider);
+    final theme = Theme.of(context);
+
+    return bundleAsync.when(
+      loading: () => const LinearProgressIndicator(minHeight: 2),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (bundle) {
+        if (bundle == null) return const SizedBox.shrink();
+        final score = bundle['score'];
+        if (score is! Map) return const SizedBox.shrink();
+        final percent = (score['percent'] as num?)?.toInt();
+        if (percent == null) return const SizedBox.shrink();
+
+        final missing = score['missing'];
+        final nextSteps = missing is List ? missing.take(2).toList() : const [];
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tenant profile',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$percent%',
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                Text(
+                  'Profile completeness — not a credit score',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (nextSteps.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  for (final step in nextSteps)
+                    if (step is Map && step['action'] != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          '+${step['points'] ?? ''} ${step['action']}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

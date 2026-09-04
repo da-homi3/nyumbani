@@ -9,9 +9,12 @@ import 'package:go_router/go_router.dart';
 import 'package:nyumbasearch/core/network/mobile_api_repository.dart';
 import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:nyumbasearch/features/home/presentation/home_testimonials.dart';
+import 'package:nyumbasearch/features/home/presentation/home_provider_discovery_section.dart';
 import 'package:nyumbasearch/features/home/presentation/neighborhood_card.dart';
+import 'package:nyumbasearch/features/properties/data/listing.dart';
 import 'package:nyumbasearch/features/properties/data/listings_providers.dart';
 import 'package:nyumbasearch/features/properties/presentation/property_card.dart';
+import 'package:nyumbasearch/features/search/nl_search_apply.dart';
 import 'package:nyumbasearch/shared/widgets/ambient_backdrop.dart';
 import 'package:nyumbasearch/shared/widgets/async_body.dart';
 import 'package:nyumbasearch/shared/widgets/motion.dart';
@@ -57,10 +60,35 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  final _nlController = TextEditingController();
   String? _neighborhood;
   String? _locationId;
   int? _maxBudget;
   String? _type;
+  List<String> _nlHints = const [];
+
+  @override
+  void dispose() {
+    _nlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitNlSearch(String raw) async {
+    final parsed = await fetchNlSearch(ref, raw);
+    if (parsed == null || !mounted) return;
+    setState(() {
+      _nlHints = parsed.hints;
+      if (parsed.neighborhood != null) {
+        _neighborhood = parsed.neighborhood;
+        _locationId = null;
+      }
+      if (parsed.maxRent != null) _maxBudget = parsed.maxRent;
+      if (parsed.propertyType != null) _type = parsed.propertyType;
+    });
+    applyNlSearchToFilters(ref, parsed);
+    if (!mounted) return;
+    context.go('/search');
+  }
 
   void _applyAndBrowse() {
     ref.read(searchFiltersProvider.notifier).update(
@@ -288,7 +316,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   TextSpan(text: 'Your next home in Nairobi —\n'),
                                   TextSpan(
                                     text: 'deal with verified property owners.',
-                                    style: TextStyle(color: Color(0xFF22C55E)),
+                                    style: TextStyle(color: NyumbaTokens.primaryDark),
                                   ),
                                 ],
                               ),
@@ -302,6 +330,82 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   ),
                             ),
                             const SizedBox(height: 20),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.1),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.search,
+                                        color: Colors.white.withValues(alpha: 0.7),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _nlController,
+                                          onSubmitted: _submitNlSearch,
+                                          style: const TextStyle(color: Colors.white),
+                                          cursorColor: NyumbaTokens.primaryDark,
+                                          decoration: InputDecoration(
+                                            hintText: 'Try: 2 bedroom in Kilimani under 60k',
+                                            hintStyle: TextStyle(
+                                              color: Colors.white.withValues(alpha: 0.45),
+                                            ),
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                          ),
+                                        ),
+                                      ),
+                                      Material(
+                                        color: NyumbaTokens.primaryDark,
+                                        shape: const CircleBorder(),
+                                        child: IconButton(
+                                          tooltip: 'Search',
+                                          onPressed: () => _submitNlSearch(_nlController.text),
+                                          icon: const Icon(
+                                            Icons.arrow_forward,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (_nlHints.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: _nlHints
+                                    .map(
+                                      (hint) => Chip(
+                                        label: Text(
+                                          hint,
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                        backgroundColor: Colors.white.withValues(alpha: 0.12),
+                                        labelStyle: const TextStyle(color: Colors.white),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ],
+                            const SizedBox(height: 14),
                             _HomeSearchCard(
                               neighborhood: _neighborhood,
                               maxBudget: _maxBudget,
@@ -361,7 +465,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     icon: const Icon(Icons.arrow_forward, size: 18),
                                     label: const Text('Browse homes'),
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF22C55E),
+                                      backgroundColor: NyumbaTokens.primaryDark,
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(vertical: 14),
                                     ),
@@ -405,7 +509,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       Text(
                         'POPULAR NEIGHBORHOODS',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: const Color(0xFF22C55E),
+                              color: NyumbaTokens.primaryDark,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.1,
                             ),
@@ -440,6 +544,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             SliverToBoxAdapter(
+              child: const HomeProviderDiscoverySection(),
+            ),
+            SliverToBoxAdapter(
               child: ColoredBox(
                 color: const Color(0xFF0B1220),
                 child: Padding(
@@ -460,7 +567,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       Text(
                         'FEATURED',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: const Color(0xFF22C55E),
+                              color: NyumbaTokens.primaryDark,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.1,
                             ),
@@ -559,7 +666,7 @@ class _QualStat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: Color(0xFF22C55E),
+            color: NyumbaTokens.primaryDark,
             fontWeight: FontWeight.w800,
             fontSize: 20,
           ),
@@ -628,7 +735,7 @@ class _StatsChip extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-              color: Color(0xFF22C55E),
+              color: NyumbaTokens.primaryDark,
               shape: BoxShape.circle,
             ),
           ),
@@ -637,7 +744,7 @@ class _StatsChip extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF22C55E),
+                color: NyumbaTokens.primaryDark,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
@@ -707,7 +814,7 @@ class _HomeSearchCard extends StatelessWidget {
                 onTap: onType,
               ),
               Material(
-                color: const Color(0xFF22C55E),
+                color: NyumbaTokens.primaryDark,
                 child: InkWell(
                   onTap: onSearch,
                   child: const SizedBox(
@@ -853,7 +960,7 @@ class _HomeRecommendations extends ConsumerWidget {
                     child: Text(
                       '$score% Match',
                       style: const TextStyle(
-                        color: Color(0xFF22C55E),
+                        color: NyumbaTokens.primaryDark,
                         fontWeight: FontWeight.w800,
                       ),
                     ),

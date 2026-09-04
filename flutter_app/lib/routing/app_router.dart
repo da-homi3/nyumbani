@@ -29,6 +29,10 @@ import 'package:nyumbasearch/features/content/presentation/advertise_page.dart';
 import 'package:nyumbasearch/features/content/presentation/contact_page.dart';
 import 'package:nyumbasearch/features/content/presentation/site_content_page.dart';
 import 'package:nyumbasearch/features/favorites/presentation/saved_page.dart';
+import 'package:nyumbasearch/features/applications/presentation/apply_to_rent_card.dart';
+import 'package:nyumbasearch/features/viewings/presentation/book_viewing_card.dart';
+import 'package:nyumbasearch/features/landlord/presentation/landlord_applications_page.dart';
+import 'package:nyumbasearch/features/landlord/presentation/landlord_viewings_page.dart';
 import 'package:nyumbasearch/features/home/presentation/home_page.dart';
 import 'package:nyumbasearch/features/home/presentation/home_shell.dart';
 import 'package:nyumbasearch/features/billing/presentation/billing_page.dart';
@@ -58,6 +62,7 @@ import 'package:nyumbasearch/features/property_management/presentation/pm_list_p
 import 'package:nyumbasearch/features/property_management/presentation/pm_property_page.dart';
 import 'package:nyumbasearch/features/property_management/presentation/pm_subscribe_page.dart';
 import 'package:nyumbasearch/features/providers/presentation/provider_detail_page.dart';
+import 'package:nyumbasearch/features/providers/presentation/provider_portfolio_page.dart';
 import 'package:nyumbasearch/features/providers/presentation/provider_me_page.dart';
 import 'package:nyumbasearch/features/providers/presentation/provider_register_page.dart';
 import 'package:nyumbasearch/features/providers/presentation/providers_page.dart';
@@ -212,6 +217,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SavedPage(),
       ),
       fadeRoute(
+        path: '/applications',
+        builder: (context, state) => const TenantApplicationsPage(),
+      ),
+      fadeRoute(
+        path: '/viewings',
+        builder: (context, state) => const TenantViewingsPage(),
+      ),
+      fadeRoute(
         path: '/profile',
         builder: (context, state) => const SettingsPage(),
       ),
@@ -280,6 +293,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LeadPacksPage(),
       ),
       fadeRoute(
+        path: '/landlord/applications',
+        builder: (context, state) => const LandlordApplicationsPage(),
+      ),
+      fadeRoute(
+        path: '/landlord/viewings',
+        builder: (context, state) => const LandlordViewingsPage(),
+      ),
+      fadeRoute(
         path: '/billing',
         builder: (context, state) => const BillingPage(),
       ),
@@ -313,6 +334,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/pm/:id',
         builder: (context, state) => PmPropertyPage(
           propertyId: state.pathParameters['id']!,
+        ),
+      ),
+      fadeRoute(
+        path: '/provider/:id',
+        builder: (context, state) => ProviderPortfolioPage(
+          providerId: state.pathParameters['id']!,
         ),
       ),
       fadeRoute(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyumbasearch/core/theme/nyumba_tokens.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -271,7 +272,7 @@ class _VideoControls extends StatelessWidget {
                     controller,
                     allowScrubbing: true,
                     colors: const VideoProgressColors(
-                      playedColor: Color(0xFF22C55E),
+                      playedColor: NyumbaTokens.primaryDark,
                       bufferedColor: Colors.white24,
                       backgroundColor: Colors.white12,
                     ),

@@ -168,7 +168,7 @@ class _ChartLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = <(Color, String)>[
-      (Color(0xFF22C55E), 'MRR'),
+      (NyumbaTokens.primaryDark, 'MRR'),
       (Color(0xFF3B82F6), 'Boosts'),
       (Color(0xFF1EB88A), 'Verify'),
       (Color(0xFFF6AD55), 'Leads'),
@@ -221,7 +221,7 @@ class _RevenueChartPainter extends CustomPainter {
   final Color axisColor;
 
   static const _stack = <(String, Color)>[
-    ('mrr', Color(0xFF22C55E)),
+    ('mrr', NyumbaTokens.primaryDark),
     ('boosts', Color(0xFF3B82F6)),
     ('verification', Color(0xFF1EB88A)),
     ('leads', Color(0xFFF6AD55)),
